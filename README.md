@@ -1,14 +1,12 @@
 # Overview
-This project transforms raw videos into structured graph representations that describe the evolving relationships and actions happening on screen.
-Each frame sequence (chunk) becomes a graph state — where:
 
-Nodes represent detected objects,
-
-Edges represent interactions or actions between them, and
-
-The graph evolves over time as scenes change.
-
-The system not only interprets what’s happening in the video, but also predicts the next most probable events, allowing for dynamic scene understanding, reasoning, and forecasting.
+Current video captioning systems are constrained by domain-labeled datasets (e.g., crime-only corpora), yielding agents that simply mirror their training scope rather than understanding open-world scenes.
+Our system delivers **domain-agnostic video annotation** by coupling **semantic segmentation** with an agentic **orchestrator/mapper**, enabling robust label grounding across diverse footage.
+Beyond naming categories, we provide **instance-level disambiguation** (e.g., **person 1**, **person 2**, **person 3**) so identical classes within the same frame remain uniquely trackable.
+For each video chunk, we construct a **graph of actions** where nodes are **labels** and edges are **observed interactions**, producing an interpretable, queryable structure.
+In the **final chunk**, the graph additionally renders **predicted interactions** as **dotted edges**, turning passive description into forward-looking situational awareness.
+These predictions integrate **k‑means–based recommendation** over agent states with **temporal context** from prior chunks—akin to sequence models such as **RNNs**—to surface the **top‑three next actions**.
+The result is a **general-purpose, instance-aware, predictive video understanding pipeline** that transcends dataset silos and supports downstream analytics and decision-making.
 
 ## How It Works
 1. Video Chunking
