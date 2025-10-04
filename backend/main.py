@@ -224,3 +224,127 @@ print("FinalLabels:", c2["FinalLabels"])
 print("Interactions:")
 for (l1, l2, desc) in c2["Interactions"]:
     print(f"  ({l1}, {l2}, {desc})")
+PREDICTION_MODEL = "gpt-4.1-mini"  
+PREDICTIONS_TOP_K = 3
+
+# ---- Next-event predictor (LLM) ----
+from typing import List
+
+def predict_next_events(previous_summaries: List[str], current_summary: str, current_objects: List[str], k: int = 3) -> List[str]:
+    """
+    Predicts the top k next possible events in a video scene using an LLM.
+    Returns a list[str], one event per line.
+    """
+    prompt = f"""
+You are an action prediction model for a video-to-graph system.
+
+The video is processed into chunks. Each chunk has:
+- A summary of actions
+- A set of objects detected on screen
+
+You will be given:
+1. Summaries of previous chunks
+2. The current chunk summary
+3. The current objects in the scene
+
+Your task is:
+- Predict the most likely next events in the *next chunk*.
+- If the scene is stable and nothing is likely to change, say "No significant change" or describe small, realistic variations.
+- Do NOT invent objects outside the given object list.
+- Keep predictions grounded in what has been happening.
+
+---
+
+Previous summaries:
+{chr(10).join(f"- {s}" for s in previous_summaries)}
+
+Current chunk summary:
+{current_summary}
+
+Current objects in scene:
+{', '.join(current_objects)}
+
+Now, list the most likely next events (one per line):
+""".strip()
+
+    resp = client.chat.completions.create(
+        model=PREDICTION_MODEL,
+        messages=[
+            {"role": "system", "content": "You are a video action predictor for a graph-based video understanding system."},
+            {"role": "user", "content": prompt}
+        ],
+        temperature=0.1,
+        top_p=1,
+        n=1,
+    )
+    text_output = resp.choices[0].message.content.strip()
+    events = [line.strip("-• ").strip() for line in text_output.split("\n") if line.strip()]
+    return events[:k]
+def _chunk_summary_from_interactions(inter_json: Dict[str, Any]) -> str:
+    """
+    Make a compact summary string from the interactions JSON.
+    Falls back to 'No interactions' when empty.
+    """
+    interactions = inter_json.get("interactions", []) if inter_json else []
+    if not interactions:
+        return "No interactions"
+    parts = []
+    for it in interactions[:8]:  # keep it short
+        labs = it.get("labels") or []
+        action = (it.get("action") or "").strip()
+        desc = (it.get("description") or "").strip()
+        if action and len(labs) >= 2:
+            parts.append(f"{labs[0]} {action} {labs[1]}")
+        elif desc:
+            parts.append(desc)
+    return "; ".join(parts) if parts else "No interactions"
+# ---------------- PREDICTION STEP (last chunk only) ----------------
+if len(chunks) > 0:
+    last_idx = len(chunks) - 1
+
+    # previous_summaries: from all chunks before the last
+    previous_summaries = [
+        _chunk_summary_from_interactions(interactions_by_chunk[i])
+        for i in range(last_idx)
+    ]
+
+    # current_summary: from the last chunk
+    current_summary = _chunk_summary_from_interactions(interactions_by_chunk[last_idx])
+
+    # current_objects: unified labels from the last chunk (mapping step)
+    current_unified = mappings[last_idx].get("unified_objects", []) if last_idx < len(mappings) else []
+    current_objects = sorted({
+        (u.get("label") or "").lower()
+        for u in current_unified
+        if u.get("label")
+    })
+
+    # ---- Print the inputs as requested ----
+    print("\n[predict] Inputs for predict_next_events()")
+    print("[predict] previous_summaries:")
+    for s in previous_summaries:
+        print("  -", s)
+    print("[predict] current_summary:", current_summary)
+    print("[predict] current_objects:", current_objects)
+
+    # ---- Run predictor ----
+    NextEvents = predict_next_events(
+        previous_summaries=previous_summaries,
+        current_summary=current_summary,
+        current_objects=current_objects,
+        k=PREDICTIONS_TOP_K
+    )
+
+    # ---- Print the outputs as requested ----
+    print("[predict] NextEvents:", NextEvents)
+
+    # Stash into the final result for the frontend (easy to consume)
+    pipeline_result["Predictions"] = {
+        "last_chunk_index": last_idx,
+        "previous_summaries": previous_summaries,
+        "current_summary": current_summary,
+        "current_objects": current_objects,
+        "events": NextEvents,
+        "model": PREDICTION_MODEL,
+        "k": PREDICTIONS_TOP_K,
+    }
