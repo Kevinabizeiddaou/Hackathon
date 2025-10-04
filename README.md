@@ -95,15 +95,104 @@ This predictive ability enables anticipation of future scene dynamics.
 ## System Architecture
 Agent / Module	Role
 
-Chunking Agent	Splits video into time-based states
+Chunking Agent	/ Splits video into time-based states
 
-Object Detector (HF SegFormer)	Extracts and segments visual objects
+Object Detector (HF SegFormer) /	Extracts and segments visual objects
 
-Describer Agent	Provides semantic labels and contextual understanding
+Describer Agent	/ Provides semantic labels and contextual understanding
 
-Action Describer Agent	Infers what is happening between objects
+Action Describer Agent / Infers what is happening between objects
 
-Predictive Agent	Forecasts the next possible interactions or events
+Predictive Agent / Forecasts the next possible interactions or events
 
 
+## Sample Input/Output
 
+### Input: https://www.youtube.com/shorts/3R7_dTzq2mE 
+### Output:
+```
+[main] Chunking video…
+[main] Created 3 chunks from: C:\Users\Kareem Hassani\OneDrive\Desktop\College\4 - Year Four\Fall\EECE 503P\FINAL\Hackathon\backend\stop_horsin_around.mp4
+[main] Loading SegFormer…
+Using a slow image processor as `use_fast` is unset and a slow processor was saved with this model. `use_fast=True` will be the default behavior in v4.52, even if the model was saved with a slow processor. This will result in minor differences in outputs. You'll still be able to use a slow processor with `use_fast=False`.
+
+[main] === Processing chunk 0 ===
+[main] agent objects: 6
+[main] HF segments: 20 @ (608x1080)
+[main] mapping unified_objects: 20
+[main] interactions: 0
+[front] chunk_1 FinalLabels: ['airplane', 'bottle', 'cabinet', 'conveyer belt', 'fence', 'floor', 'fountain', 'person', 'shelf', 'sink', 'tray', 'wall']
+[front] chunk_1 Interactions (0):
+
+[main] === Processing chunk 1 ===
+[main] agent objects: 3
+[main] HF segments: 26 @ (608x1080)
+[main] mapping unified_objects: 3
+[main] interactions: 2
+[front] chunk_2 FinalLabels: ['hand', 'horse', 'watermelon']
+[front] chunk_2 Interactions (2):
+         - horse ↔ watermelon :: horse is eating the watermelon
+         - hand ↔ watermelon :: hand is holding the watermelon
+
+[main] === Processing chunk 2 ===
+[main] agent objects: 3
+[main] HF segments: 32 @ (608x1080)
+[main] mapping unified_objects: 3
+[main] interactions: 1
+[front] chunk_3 FinalLabels: ['door', 'horse', 'watermelon']
+[front] chunk_3 Interactions (1):
+         - horse ↔ watermelon :: horse is eating the watermelon
+
+[main] === PIPELINE RESULT (keys only) ===
+{
+  "video_path": "C:\\Users\\Kareem Hassani\\OneDrive\\Desktop\\College\\4 - Year Four\\Fall\\EECE 503P\\FINAL\\Hackathon\\backend\\stop_horsin_around.mp4",
+  "num_chunks": 3,
+  "per_chunk_keys": [
+    [
+      "chunk_index",
+      "agent_json",
+      "agent_raw",
+      "hf_segments",
+      "image_size",
+      "mapping",
+      "interactions"
+    ],
+    [
+      "chunk_index",
+      "agent_json",
+      "agent_raw",
+      "hf_segments",
+      "image_size",
+      "mapping",
+      "interactions"
+    ],
+    [
+      "chunk_index",
+      "agent_json",
+      "agent_raw",
+      "hf_segments",
+      "image_size",
+      "mapping",
+      "interactions"
+    ]
+  ],
+  "chunk_graph_keys": [
+    "chunk_1",
+    "chunk_2",
+    "chunk_3"
+  ]
+}
+['chunk_1', 'chunk_2', 'chunk_3']
+FinalLabels: ['hand', 'horse', 'watermelon']
+Interactions:
+  (horse, watermelon, horse is eating the watermelon)
+  (hand, watermelon, hand is holding the watermelon)
+
+[predict] Inputs for predict_next_events()
+[predict] previous_summaries:
+  - No interactions
+  - horse eating watermelon; hand holding watermelon
+[predict] current_summary: horse eating watermelon
+[predict] current_objects: ['door', 'horse', 'watermelon']
+[predict] NextEvents: ['horse continues eating watermelon', 'horse moves closer to the door', 'horse finishes eating watermelon']
+```
