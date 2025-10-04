@@ -94,8 +94,16 @@ This predictive ability enables anticipation of future scene dynamics.
 
 ## System Architecture
 Agent / Module	Role
+
 Chunking Agent	Splits video into time-based states
+
 Object Detector (HF SegFormer)	Extracts and segments visual objects
+
 Describer Agent	Provides semantic labels and contextual understanding
+
 Action Describer Agent	Infers what is happening between objects
+
 Predictive Agent	Forecasts the next possible interactions or events
+
+
+
