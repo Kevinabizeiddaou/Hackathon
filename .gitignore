@@ -1,0 +1,91 @@
+# === Python ===
+__pycache__/
+*.py[cod]
+*.pyo
+*.pyd
+*.pyc
+*.pdb
+*.egg
+*.egg-info/
+.env
+.venv/
+venv/
+env/
+*.sqlite3
+.DS_Store
+
+# Virtual environment
+/.venv/
+/env/
+/venv/
+
+# IDE / Editor
+.vscode/
+.idea/
+*.swp
+*.swo
+
+# === FastAPI / Flask temporary files ===
+*.log
+instance/
+*.db
+*.sqlite
+__pycache__/
+
+# === Node / React / Frontend ===
+frontend/node_modules/
+frontend/.next/
+frontend/dist/
+frontend/.turbo/
+frontend/.cache/
+frontend/npm-debug.log*
+frontend/yarn-debug.log*
+frontend/yarn-error.log*
+frontend/.env.local
+frontend/.env.development.local
+frontend/.env.production.local
+frontend/.env.test.local
+
+# Build outputs
+/frontend/build/
+/frontend/.vite/
+/frontend/.parcel-cache/
+/frontend/out/
+
+# === General ===
+*.bak
+*.tmp
+*.temp
+*.zip
+*.tar
+*.gz
+
+# OS files
+Thumbs.db
+.DS_Store
+
+# === Local Media / Videos ===
+*.mp4
+*.avi
+*.mov
+*.mkv
+*.webm
+*.wav
+*.mp3
+*.jpg
+*.jpeg
+*.png
+*.gif
+*.bmp
+
+# === Logs ===
+logs/
+*.log
+nohup.out
+
+# === Misc ===
+# Local testing files
+test_*.py
+tmp/
+scratch/
+uploads/
