@@ -89,3 +89,17 @@ test_*.py
 tmp/
 scratch/
 uploads/
+
+frontend2/node_modules/
+frontend2/.next/
+frontend2/dist/
+frontend2/.turbo/
+frontend2/.cache/
+frontend2/npm-debug.log*
+frontend2/yarn-debug.log*
+frontend2/yarn-error.log*
+frontend2/.env.local
+frontend2/.env.development.local
+frontend2/.env.production.local
+frontend2/.env.test.local
+frontend2/.angular

@@ -38,8 +38,11 @@ export const GraphModal: React.FC = () => {
             id: edge.id, 
             source: edge.source, 
             target: edge.target, 
-            label: edge.label 
-          }
+            label: edge.label,
+            type: edge.type,
+            probability: edge.probability
+          },
+          classes: edge.type === 'predicted' ? 'predicted-edge' : 'current-edge'
         }))
       ],
       style: [
@@ -74,6 +77,39 @@ export const GraphModal: React.FC = () => {
             'text-rotation': 'autorotate',
             'text-margin-y': '-10px',
             'color': '#374151'
+          }
+        },
+        {
+          selector: '.current-edge',
+          style: {
+            'width': '3px',
+            'line-color': '#6b7280',
+            'target-arrow-color': '#6b7280',
+            'target-arrow-shape': 'triangle',
+            'curve-style': 'bezier',
+            'label': 'data(label)',
+            'font-size': '10px',
+            'text-rotation': 'autorotate',
+            'text-margin-y': '-10px',
+            'color': '#374151'
+          }
+        },
+        {
+          selector: '.predicted-edge',
+          style: {
+            'width': '2px',
+            'line-color': '#f59e0b',
+            'target-arrow-color': '#f59e0b',
+            'target-arrow-shape': 'triangle',
+            'curve-style': 'bezier',
+            'line-style': 'dashed',
+            'line-dash-pattern': [6, 3],
+            'label': 'data(label)',
+            'font-size': '9px',
+            'text-rotation': 'autorotate',
+            'text-margin-y': '-8px',
+            'color': '#d97706',
+            'font-style': 'italic'
           }
         },
         {

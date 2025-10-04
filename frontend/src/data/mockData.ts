@@ -1,4 +1,4 @@
-import { Chunk, AnalyzeResponse } from '../types';
+import type { Chunk, AnalyzeResponse } from '../types';
 
 export const mockChunks: Chunk[] = [
   { id: "c001", startMs: 0,    endMs: 2000, thumbnailUrl: "/thumbs/c001.jpg" },
@@ -18,6 +18,10 @@ export const mockAnalyzeById: Record<string, AnalyzeResponse> = {
     relations: [
       ["person", "near", "person"]
     ],
+    predicted_actions: [
+      { id: "pred1", source: "person", target: "person", action: "will_face_each_other", probability: 0.85 },
+      { id: "pred2", source: "person", target: "person", action: "will_extend_hands", probability: 0.72 }
+    ],
     narrative: "Two people dance salsa side by side with gentle hip and hand movements."
   },
   "c002": {
@@ -29,6 +33,10 @@ export const mockAnalyzeById: Record<string, AnalyzeResponse> = {
     relations: [
       ["person", "in_front_of", "person"],
       ["person", "near", "person"]
+    ],
+    predicted_actions: [
+      { id: "pred3", source: "person", target: "person", action: "will_spin", probability: 0.78 },
+      { id: "pred4", source: "person", target: "person", action: "will_clap", probability: 0.65 }
     ],
     narrative: "Two people face each other closely, continuing their dance."
   },
@@ -44,6 +52,10 @@ export const mockAnalyzeById: Record<string, AnalyzeResponse> = {
       ["person", "near", "person"],
       ["car", "behind", "person"]
     ],
+    predicted_actions: [
+      { id: "pred5", source: "person", target: "person", action: "will_bow", probability: 0.92 },
+      { id: "pred6", source: "dog", target: "person", action: "will_run_across", probability: 0.45 }
+    ],
     narrative: "One dancer performs a spin while their partner watches, with a car visible in the background."
   },
   "c004": {
@@ -56,6 +68,10 @@ export const mockAnalyzeById: Record<string, AnalyzeResponse> = {
     relations: [
       ["person", "near", "person"],
       ["dog", "pass", "person"]
+    ],
+    predicted_actions: [
+      { id: "pred7", source: "person", target: "person", action: "will_applaud", probability: 0.88 },
+      { id: "pred8", source: "person", target: "person", action: "will_shake_hands", probability: 0.73 }
     ],
     narrative: "The dancers bow to each other as a small dog runs across the scene."
   }

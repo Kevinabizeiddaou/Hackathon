@@ -1,4 +1,4 @@
-import { AnalyzeResponse, GraphData } from '../types';
+import type { AnalyzeResponse, GraphData, GraphEdge } from '../types';
 
 export function toGraph(data: AnalyzeResponse): GraphData {
   const uniq = <T,>(arr: T[]) => Array.from(new Set(arr.map(x => JSON.stringify(x)))).map(x => JSON.parse(x));
@@ -11,13 +11,35 @@ export function toGraph(data: AnalyzeResponse): GraphData {
     }))
   );
 
-  // naive mapping: try to connect first subject name to first matching node, etc.
-  const edges = data.relations.map((r, i) => {
+  // Current relations (solid edges)
+  const currentEdges: GraphEdge[] = data.relations.map((r, i) => {
     const [subj, rel, obj] = r;
     const src = nodes.find(n => n.label.toLowerCase() === subj.toLowerCase())?.id || subj;
     const dst = nodes.find(n => n.label.toLowerCase() === obj.toLowerCase())?.id || obj;
-    return { id: "e" + i, source: src, target: dst, label: rel };
+    return { 
+      id: "current_" + i, 
+      source: src, 
+      target: dst, 
+      label: rel,
+      type: 'current'
+    };
   });
+
+  // Predicted actions (dotted edges)
+  const predictedEdges: GraphEdge[] = (data.predicted_actions || []).map((pred, i) => {
+    const src = nodes.find(n => n.label.toLowerCase() === pred.source.toLowerCase())?.id || pred.source;
+    const dst = nodes.find(n => n.label.toLowerCase() === pred.target.toLowerCase())?.id || pred.target;
+    return {
+      id: "predicted_" + i,
+      source: src,
+      target: dst,
+      label: pred.action,
+      type: 'predicted',
+      probability: pred.probability
+    };
+  });
+
+  const edges = [...currentEdges, ...predictedEdges];
 
   return { nodes, edges };
 }
