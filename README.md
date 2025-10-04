@@ -207,3 +207,6 @@ Interactions:
 
 
 If you wish to try it for yourself, you can run main.py (with any video, just change the video path in main) and observe the graphs that are generated in the same directory.
+
+
+Team: Kareem Hassani, Karim Fayad, Kevin Abi Zeid Daou
