@@ -28,14 +28,160 @@ from agent_spec_captioning import (                  # Interactions JSON (single
     set_openai_client,
     describe_interactions_for_labels,
 )
+# ==== Graph rendering helpers (inline; no separate script) ====================
+# Prereqs (once):  pip install networkx matplotlib
+def render_graphs_from_pipeline(pipeline_result, outdir="graphs", seed=7):
+    import os, re
+    from typing import List, Tuple, Set
+    try:
+        import networkx as nx
+        import matplotlib.pyplot as plt
+    except Exception as e:
+        print("[draw] Missing deps. Install with: pip install networkx matplotlib")
+        print("[draw] Error:", e)
+        return []
+
+    def _words(s: str) -> List[str]:
+        import re
+        return re.findall(r"[a-zA-Z0-9_]+", str(s).lower())
+
+    def _find_label_pairs_in_text(text: str, known_labels: Set[str]) -> List[Tuple[str, str]]:
+        toks = _words(text)
+        seen = []
+        for i, t in enumerate(toks):
+            if t in known_labels:
+                for j in range(i + 1, len(toks)):
+                    u = toks[j]
+                    if u in known_labels and u != t:
+                        pair = (t, u)
+                        if pair not in seen:
+                            seen.append(pair)
+        return seen
+
+    def _extract_action_phrase(text: str, a: str, b: str) -> str:
+        import re
+        t = " " + str(text).lower() + " "
+        for lab in sorted({a, b}, key=len, reverse=True):
+            t = re.sub(rf"\b{re.escape(lab)}\b", " ", t)
+        t = re.sub(r"\b(the|a|an|to|is|are|continues|keep|keeps|finish(es)?|will|likely|may|might|of|in|on|at|with|closer)\b", " ", t)
+        t = re.sub(r"\s+", " ", t).strip()
+        words = _words(t)
+        return " ".join(words[:3]) if words else "predicted"
+
+    def predictions_to_edges(events: List[str], known_labels: Set[str]) -> List[Tuple[str, str, str]]:
+        faux = "next_event"
+        out = []
+        for ev in events or []:
+            pairs = _find_label_pairs_in_text(ev, known_labels)
+            if pairs:
+                a, b = pairs[0]
+                act = _extract_action_phrase(ev, a, b) or "predicted"
+                out.append((a, b, act))
+            else:
+                toks = _words(ev)
+                hits = [lab for lab in known_labels if lab in toks]
+                if hits:
+                    a = hits[0]
+                    act = _extract_action_phrase(ev, a, a) or "predicted"
+                    out.append((a, faux, act))
+        return out
+
+    def draw_chunk_graph(chunk_key, nodes, solid_edges, dotted_edges=None, outdir="graphs", seed=7):
+        import os
+        import networkx as nx
+        import matplotlib.pyplot as plt
+
+        G = nx.Graph()
+        for n in nodes:
+            G.add_node(n)
+        if dotted_edges:
+            for (u, v, _) in dotted_edges:
+                if u not in G:
+                    G.add_node(u)
+                if v not in G:
+                    G.add_node(v)
+
+        pos = nx.spring_layout(G, seed=seed, k=1.1)
+        plt.figure(figsize=(8, 6))
+        nx.draw_networkx_nodes(G, pos, node_size=900, linewidths=1.2, edgecolors="black")
+        nx.draw_networkx_labels(G, pos, font_size=9)
+
+        if solid_edges:
+            e_solid = [(u, v) for (u, v, _) in solid_edges]
+            nx.draw_networkx_edges(G, pos, edgelist=e_solid, width=2.0)
+            labels_solid = {(u, v): (lbl if len(lbl) <= 28 else lbl[:25] + "…") for (u, v, lbl) in solid_edges}
+            nx.draw_networkx_edge_labels(G, pos, edge_labels=labels_solid, font_size=8)
+
+        if dotted_edges:
+            e_dotted = [(u, v) for (u, v, _) in dotted_edges]
+            nx.draw_networkx_edges(G, pos, edgelist=e_dotted, width=2.0, style="dashed", alpha=0.8)
+            labels_dotted = {(u, v): (lbl if len(lbl) <= 28 else lbl[:25] + "…") for (u, v, lbl) in dotted_edges}
+            nx.draw_networkx_edge_labels(G, pos, edge_labels=labels_dotted, font_size=8, rotate=False)
+
+        plt.axis("off")
+        plt.title(f"{chunk_key} (dotted = predicted)" if dotted_edges else f"{chunk_key}")
+        os.makedirs(outdir, exist_ok=True)
+        out_path = os.path.join(outdir, f"{chunk_key}.png")
+        plt.tight_layout()
+        plt.savefig(out_path, dpi=150)
+        plt.close()
+        return out_path
+
+    chunk_graphs = pipeline_result.get("ChunkGraphs") or {}
+    if not chunk_graphs:
+        print("[draw] No 'ChunkGraphs' found.")
+        return []
+
+    # order chunk_1, chunk_2, ...
+    def chunk_num(k: str) -> int:
+        import re
+        m = re.search(r"(\d+)$", k)
+        return int(m.group(1)) if m else 0
+
+    ordered_keys = sorted(chunk_graphs.keys(), key=chunk_num)
+    last_key = ordered_keys[-1]
+
+    preds = pipeline_result.get("Predictions") or {}
+    pred_events = preds.get("events") or []
+    current_objs = preds.get("current_objects") or []
+
+    last_nodes = set([str(x).lower().strip() for x in (chunk_graphs[last_key].get("FinalLabels") or [])])
+    if current_objs:
+        last_nodes |= {str(x).lower().strip() for x in current_objs}
+
+    dotted_last = predictions_to_edges(pred_events, last_nodes) if pred_events else []
+
+    written = []
+    print(f"[draw] Rendering {len(ordered_keys)} chunk graphs → {outdir}")
+    for k in ordered_keys:
+        payload = chunk_graphs[k]
+        nodes = [str(x).lower() for x in (payload.get("FinalLabels") or [])]
+
+        solid_edges = []
+        for tup in (payload.get("Interactions") or []):
+            # support list/tuple from JSON
+            if isinstance(tup, (list, tuple)) and len(tup) >= 3:
+                u = str(tup[0]).lower().strip()
+                v = str(tup[1]).lower().strip()
+                lbl = str(tup[2]).strip()
+                solid_edges.append((u, v, lbl))
+
+        dotted = dotted_last if k == last_key else None
+        out_png = draw_chunk_graph(k, nodes, solid_edges, dotted_edges=dotted, outdir=outdir, seed=seed)
+        print(f"[draw] Wrote {out_png}")
+        written.append((k, out_png))
+
+    print("[draw] Done.")
+    return written
+# =============================================================================
 
 # --------------------------- Configuration -----------------------------------
 # ⚠️ If hardcoding, do as below; otherwise prefer env var OPENAI_API_KEY
-client = OpenAI(api_key="...")
+client = OpenAI()
 set_openai_client(client)  # for the interaction module (required once)
 
 # 2) Input video
-video_path = r"C:\Users\Kareem Hassani\OneDrive\Desktop\College\4 - Year Four\Fall\EECE 503P\Hackathon\Hackathon\backend\stop_horsin_around.mp4"  # <-- change this
+video_path = r"C:\Users\Kareem Hassani\OneDrive\Desktop\College\4 - Year Four\Fall\EECE 503P\finalfinal\Hackathon\backend\stop_horsin_around.mp4"  # <-- change this
 
 # 3) Chunking params
 min_chunk         = 4
@@ -348,3 +494,8 @@ if len(chunks) > 0:
         "model": PREDICTION_MODEL,
         "k": PREDICTIONS_TOP_K,
     }
+    # --- Render graphs directly from the in-memory pipeline_result ---
+    render_graphs_from_pipeline(pipeline_result, outdir="graphs")
+
+    with open("pipeline_result.json", "w", encoding="utf-8") as f:
+        json.dump(pipeline_result, f, ensure_ascii=False, indent=2)

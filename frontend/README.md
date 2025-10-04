@@ -1,133 +1,124 @@
-# Video Scene Graph Explorer
+# Video-to-Graph Representation System - Frontend
 
-A React-based web application that analyzes video content and visualizes scene relationships as interactive graphs.
+This Angular application provides a user interface for the video-to-graph representation agentic system. It allows users to upload videos, visualize the generated graph representations, and navigate through video chunks using an interactive slider.
 
 ## Features
 
-- **Video Upload**: Upload MP4, MOV, or AVI video files
-- **Chunk Generation**: Automatically splits videos into analyzable segments
-- **Scene Analysis**: Extracts objects and their relationships from video chunks
-- **Interactive Graph Visualization**: Uses Cytoscape.js to display scene graphs
-- **Mock Mode**: Demo mode with sample data for testing without backend
+- **Video Upload**: Upload video files for processing
+- **Interactive Timeline**: Slider to navigate through video chunks
+- **Dynamic Graph Visualization**: Real-time graph updates using D3.js
+- **Node Information**: Detailed tooltips showing object descriptions and confidence scores
+- **Edge Types**: Visual distinction between current relationships (solid lines) and predicted actions (dotted lines)
 - **Responsive Design**: Works on desktop and mobile devices
-- **Modern UI**: Built with TailwindCSS and smooth animations
 
-## Tech Stack
+## Architecture
 
-- **Frontend**: React 18 + TypeScript + Vite
-- **Styling**: TailwindCSS with custom components
-- **State Management**: Zustand
-- **Graph Visualization**: Cytoscape.js
-- **Icons**: Lucide React
-- **Backend Integration**: FastAPI (Python)
+### Components
+- `AppComponent`: Main application component with video upload and chunk navigation
+- `GraphVisualizationComponent`: D3.js-powered graph visualization with interactive nodes and edges
 
-## Project Structure
+### Services
+- `VideoGraphService`: Handles video chunk data, graph updates, and backend communication
 
-```
-src/
-├── components/          # React components
-│   ├── UploadPanel.tsx  # Video upload interface
-│   ├── ChunkTimeline.tsx # Chunk selection timeline
-│   └── GraphModal.tsx   # Graph visualization modal
-├── store/               # State management
-│   └── useAppStore.ts   # Zustand store
-├── services/            # API integration
-│   └── api.ts          # API service layer
-├── utils/               # Utility functions
-│   └── graphUtils.ts   # Graph data transformation
-├── data/               # Mock data
-│   └── mockData.ts     # Sample chunks and analysis
-├── types.ts            # TypeScript type definitions
-└── App.tsx             # Main application component
-```
+### Models
+- `GraphNode`: Represents objects detected in video frames
+- `GraphEdge`: Represents relationships and predicted actions
+- `VideoChunk`: Contains graph state for a specific time segment
+- `GraphData`: Combined nodes and edges for visualization
 
 ## Getting Started
 
-1. **Install Dependencies**:
+### Prerequisites
+- Node.js (v18 or higher)
+- npm or yarn
+- Angular CLI (optional, for development)
+
+### Installation
+
+1. Navigate to the frontend2 directory:
+   ```bash
+   cd frontend2
+   ```
+
+2. Install dependencies:
    ```bash
    npm install
    ```
 
-2. **Start Development Server**:
+3. Start the development server:
    ```bash
-   npm run dev
+   npm start
    ```
 
-3. **Open Browser**: Navigate to `http://localhost:5173`
+4. Open your browser and navigate to `http://localhost:4200`
 
-## Usage
+### Development Commands
 
-1. **Upload Video**: Click the upload area and select a video file
-2. **Generate Chunks**: Click "Generate Chunks" to split the video
-3. **Select Chunk**: Click on any chunk card to analyze it
-4. **View Graph**: The modal opens showing:
-   - Interactive graph visualization
-   - Narrative description
-   - Relations table
-   - Objects list
-5. **Navigate**: Use arrow keys or buttons to switch between chunks
+- `npm start` - Start development server
+- `npm run build` - Build for production
+- `npm run watch` - Build and watch for changes
+- `npm test` - Run unit tests
 
-## Mock Mode
+## Integration with Backend
 
-The application starts in mock mode with sample data. Toggle the "Mock Mode" switch to:
-- **ON**: Use sample data (no backend required)
-- **OFF**: Connect to FastAPI backend at `http://localhost:8000`
+The frontend is designed to integrate with your Python backend system. Key integration points:
 
-## Backend Integration
+1. **Video Processing**: `VideoGraphService.processVideo()` should send video files to your chunking and analysis pipeline
+2. **Graph Data**: The service expects video chunks with nodes (detected objects) and edges (relationships/predictions)
+3. **Real-time Updates**: The graph visualization updates automatically when chunk data changes
 
-The app integrates with a FastAPI backend that provides:
-- `POST /chunk`: Video chunking endpoint
-- `POST /analyze`: Scene analysis endpoint
+### Expected Data Format
 
-See the main `main.py` file for the backend implementation.
+```typescript
+interface VideoChunk {
+  id: string;
+  startTime: number;
+  endTime: number;
+  nodes: GraphNode[];
+  edges: GraphEdge[];
+  summary: string;
+}
+```
 
-## Key Components
+## Graph Visualization
 
-### UploadPanel
-- File picker with drag-and-drop styling
-- Mock/Live mode toggle
-- Generate chunks functionality
+The graph uses D3.js force simulation with:
+- **Nodes**: Colored by type (person, object, location)
+- **Edges**: Solid lines for current relationships, dotted for predictions
+- **Interactions**: Drag nodes, zoom/pan, hover for details
+- **Responsive**: Adapts to different screen sizes
 
-### ChunkTimeline
-- Responsive grid of chunk cards
-- Thumbnail placeholders
-- Time range display
-- Click to analyze
+## Mock Data
 
-### GraphModal
-- Full-screen modal with graph visualization
-- Tabbed interface (Graph/Relations)
-- Navigation between chunks
-- Keyboard shortcuts (←/→ arrows, Escape)
+The application includes mock data for development and demonstration:
+- 3 video chunks showing a kitchen scene
+- Person interacting with refrigerator and objects
+- Predicted actions based on context
 
-## Styling
+## Customization
 
-Uses TailwindCSS with custom component classes:
-- `.glass-card`: Glassmorphism effect
-- `.btn-primary` / `.btn-secondary`: Button styles
-- `.chunk-card`: Chunk card styling with hover effects
+### Styling
+- Global styles in `src/styles.scss`
+- Component-specific styles in respective `.scss` files
+- CSS variables for easy theme customization
 
-## Development
+### Graph Appearance
+- Node colors and sizes in `GraphVisualizationComponent`
+- Force simulation parameters for layout behavior
+- Edge styling for different relationship types
 
-- **TypeScript**: Full type safety
-- **ESLint**: Code linting
-- **Hot Reload**: Instant updates during development
-- **Responsive**: Mobile-first design approach
+## Next Steps
 
-## Demo Data
+1. Connect to your Python backend APIs
+2. Add video playback functionality
+3. Implement real-time processing updates
+4. Add export/save functionality for graph data
+5. Enhance mobile responsiveness
 
-The mock mode includes sample data for:
-- 4 video chunks (2-second segments)
-- Dance scene analysis with person-to-person relationships
-- Various objects (people, cars, dogs)
-- Spatial and interaction relations
+## Technical Stack
 
-## Future Enhancements
-
-- Real video thumbnail generation
-- Timeline scrubber
-- Node pinning functionality
-- Graph export (PNG/SVG)
-- Dark mode toggle
-- Advanced graph layouts
-- Real-time analysis progress
+- **Angular 17**: Modern Angular with standalone components
+- **D3.js**: Data visualization and graph rendering
+- **TypeScript**: Type-safe development
+- **SCSS**: Enhanced CSS with variables and mixins
+- **RxJS**: Reactive programming for data flow

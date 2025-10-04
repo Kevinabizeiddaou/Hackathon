@@ -1,6 +1,11 @@
-fastapi
-uvicorn[standard]
-pydantic
-python-multipart
-# Optional (if you want clip metadata):
+flask
+flask-cors
+openai
 opencv-python
+numpy
+pillow
+transformers
+torch
+torchvision
+scikit-image
+werkzeug
