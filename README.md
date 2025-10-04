@@ -194,3 +194,5 @@ Interactions:
 [predict] current_objects: ['door', 'horse', 'watermelon']
 [predict] NextEvents: ['horse continues eating watermelon', 'horse moves closer to the door', 'horse finishes eating watermelon']
 ```
+
+If you wish to try it for yourself, you can run main.py (with any video, just change the video path in main) and observe the graphs that are generated in the same directory.
