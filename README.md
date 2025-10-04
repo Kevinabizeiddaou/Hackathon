@@ -195,4 +195,11 @@ Interactions:
 [predict] NextEvents: ['horse continues eating watermelon', 'horse moves closer to the door', 'horse finishes eating watermelon']
 ```
 
+<img width="1200" height="900" alt="chunk_1" src="https://github.com/user-attachments/assets/856c05d8-d5ec-4509-818c-d0014408cf73" />
+
+<img width="1200" height="900" alt="chunk_2" src="https://github.com/user-attachments/assets/c690b5d5-cd56-4925-ba4d-c362c56384d7" />
+
+<img width="1200" height="900" alt="chunk_3" src="https://github.com/user-attachments/assets/872eb7fd-d534-49e5-8601-ed293d2dadcb" />
+
+
 If you wish to try it for yourself, you can run main.py (with any video, just change the video path in main) and observe the graphs that are generated in the same directory.
